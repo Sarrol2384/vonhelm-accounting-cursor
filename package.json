@@ -1,0 +1,27 @@
+{
+  "name": "accounting-cursor",
+  "private": true,
+  "scripts": {
+    "dev": "node packages/db/scripts/ensure-prisma-dev.mjs && dotenv -e .env -- turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "db:generate": "pnpm --filter @accounting/db generate",
+    "db:push": "pnpm --filter @accounting/db push",
+    "db:seed": "pnpm --filter @accounting/db seed",
+    "db:studio": "pnpm --filter @accounting/db studio",
+    "db:local": "pnpm --filter @accounting/db exec prisma dev --detach -n accounting && pnpm db:sync-env",
+    "db:sync-env": "node packages/db/scripts/sync-prisma-dev-env.mjs",
+    "db:reset-local": "pnpm --filter @accounting/db exec prisma dev rm accounting --force && pnpm db:local",
+    "db:fresh": "pnpm db:reset-local && pnpm db:push && pnpm db:seed",
+    "db:build": "pnpm --filter @accounting/db build"
+  },
+  "devDependencies": {
+    "dotenv-cli": "^8.0.0",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20"
+  }
+}

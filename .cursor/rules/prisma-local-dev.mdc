@@ -1,0 +1,41 @@
+---
+description: Prisma local dev DB — mandatory startup order and login failure recovery
+alwaysApply: true
+---
+
+# Prisma local dev (accounting-cursor)
+
+This project uses **Prisma Dev** (`prisma dev`), not Docker/Supabase, for local Postgres.
+
+## Why login shows "Database unavailable" every time
+
+- The API uses `DATABASE_URL=prisma+postgres://localhost:51213/...` (Prisma **proxy**).
+- That proxy only works while `prisma dev -n accounting` is running.
+- `pnpm dev` alone used to start web + API **without** the DB → login always returned 500 → login page showed the same generic error.
+- After reboot or closing terminals, Prisma dev dies but `.env` keeps stale ports.
+
+Prisma error signature: `Cannot fetch data from service: fetch failed`
+
+## Startup (automatic)
+
+`pnpm dev` now runs `ensure-prisma-dev.mjs` first (starts Prisma dev if needed, syncs `.env`).
+
+## Manual recovery (when login/DB still fails)
+
+Run from repo root, in order:
+
+```bash
+pnpm db:local      # start prisma dev + sync .env ports
+pnpm db:push       # apply schema (if needed)
+pnpm db:seed       # demo user admin@demo.co.za / password123
+# restart pnpm dev if API was already running (API loads DATABASE_URL at boot)
+```
+
+Nuclear reset: `pnpm db:fresh` then `pnpm dev`.
+
+## Rules for agents
+
+- On **login failures**, **Today blank**, or **Internal server error** on first API call: check Prisma dev first, not app code.
+- Never point runtime `DATABASE_URL` at raw TCP port 51214 — use proxy 51213. CLI (`db push`/`seed`) uses `DIRECT_URL` on 51214.
+- After `db:local` or `db:sync-env`, **restart the API** if it was already running.
+- Do not treat every API 500 as a schema bug — verify DB connectivity first.
