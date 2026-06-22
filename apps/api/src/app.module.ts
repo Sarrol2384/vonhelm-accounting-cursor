@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { PrismaModule } from './prisma/prisma.module';
@@ -17,6 +18,7 @@ import { StorageModule } from './storage/storage.module';
 import { OwnerModule } from './owner/owner.module';
 
 @Module({
+  controllers: [AppController],
   imports: [
     PrismaModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
