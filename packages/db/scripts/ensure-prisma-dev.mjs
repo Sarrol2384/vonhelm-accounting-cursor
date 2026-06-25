@@ -1,11 +1,19 @@
 import { execSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 const dbDir = resolve(root, 'packages/db');
 const envPath = resolve(root, '.env');
+
+function usesHostedDatabase() {
+  const env = readFileSync(envPath, 'utf8');
+  const match = env.match(/^DATABASE_URL="([^"]+)"/m);
+  if (!match) return false;
+  const url = match[1];
+  return url.includes('supabase.co') || url.includes('supabase.com');
+}
 
 function prismaDevLs() {
   return execSync('npx prisma dev ls', { cwd: dbDir, encoding: 'utf8' });
@@ -27,6 +35,11 @@ function syncEnv() {
 if (!existsSync(envPath)) {
   console.error('[db] Missing .env — copy .env.example first.');
   process.exit(1);
+}
+
+if (usesHostedDatabase()) {
+  console.log('[db] Using hosted DATABASE_URL — skipping local prisma dev.');
+  process.exit(0);
 }
 
 try {
